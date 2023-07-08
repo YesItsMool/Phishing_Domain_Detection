@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}
+Phishing Prediction
+{% endblock %}
+
+{% block content %}
+<form id="prediction-form" method="post">
+    <label for="url">URL:</label><br>
+    <input type="text" id="url" name="url"><br>
+    <input type="submit" value="Predict">
+</form>
+{% if prediction %}
+<p id="prediction-result">Prediction: {{ prediction }}</p>
+{% endif %}
+{% endblock %}
