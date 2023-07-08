@@ -2,7 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+phishing_url_classifier.pkl
+model.joblib
 # C extensions
 *.so
 
