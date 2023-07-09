@@ -7,6 +7,11 @@ from routes import auth
 from fastapi.middleware.cors import CORSMiddleware
 from joblib import load
 import numpy as np
+import pandas as pd
+import logging
+from fastapi import FastAPI, HTTPException
+from feature_extraction import extract_features
+
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -17,10 +22,15 @@ app.include_router(auth.router)
 # Load the model
 model = load('model.joblib')
 
+#logging
+logger = logging.getLogger("uvicorn")
+logger.setLevel(logging.DEBUG) 
 class RegistrationForm(BaseModel):
     username: str
     email: str
     password: str
+class URL(BaseModel):
+    url: str
 
 
 class LoginForm(BaseModel):
@@ -91,32 +101,37 @@ def login(request: Request, form: LoginForm):
     return templates.TemplateResponse("login_success.html", {"request": request})
 
 
-@app.post("/predict")
-def predict(features: Features):
-    # Convert the features to a dictionary
-    features_dict = features.dict()
+from feature_extraction import extract_features
 
-    # Check if all required features are present
-    required_features = ['asn_ip', 'time_domain_activation', 'length_url', 'qty_dollar_directory', 'qty_dollar_file', 'qty_underline_file', 'qty_equal_file', 'qty_and_file', 'qty_questionmark_directory', 'qty_tilde_file', 'qty_asterisk_file', 'qty_equal_directory', 'qty_plus_file', 'qty_comma_file', 'qty_exclamation_directory', 'qty_slash_file', 'qty_space_file', 'qty_and_directory', 'qty_at_directory', 'qty_hashtag_directory', 'qty_asterisk_directory', 'qty_questionmark_file', 'qty_hashtag_file', 'qty_exclamation_file', 'qty_at_file', 'qty_comma_directory', 'qty_percent_file', 'qty_hyphen_file', 'qty_tilde_directory', 'qty_underline_directory', 'qty_space_directory', 'qty_percent_directory', 'qty_plus_directory', 'qty_hyphen_directory', 'file_length', 'qty_dot_file', 'qty_dot_directory', 'qty_slash_url', 'qty_slash_directory', 'directory_length']
-    for feature in required_features:
-        if feature not in features_dict:
-            raise HTTPException(status_code=400, detail=f"Feature '{feature}' missing from request")
+@app.post("/predict")
+async def predict(url: URL):
+    extracted_features = await extract_features(url.url)
 
     # Convert the features to a numpy array
-    features = np.array(list(features_dict.values()))
-    
-    # Make a prediction
+    features_array = np.array(list(extracted_features.values())).astype(float)
+
+    # Create a DataFrame with appropriate column names
+    features_df = pd.DataFrame([features_array], columns=extracted_features.keys())
+
     try:
-        prediction = model.predict([features])
+        # Make a prediction
+        prediction = model.predict(features_df)
+        # Convert the prediction to a native Python int
+        prediction = int(prediction[0])
+        # Return the prediction
+        return {"prediction": prediction}
     except Exception as e:
+        # Log the exception
+        logger.exception("An error occurred during prediction")
+        # Return an error response
         raise HTTPException(status_code=500, detail=f"An error occurred during prediction: {str(e)}")
-    
-    # Convert the prediction to a native Python int
-    prediction = int(prediction[0])
-    
-    # Return the prediction
-    # return templates.TemplateResponse("index.html", {"request": request, "prediction": prediction})
-    return {"prediction": prediction}
+
+@app.exception_handler(Exception)
+async def exception_handler(request: Request, exc: Exception):
+    logger.exception("An error occurred during request processing")
+    raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
 
 # Enable CORS
 app.add_middleware(
@@ -128,6 +143,5 @@ app.add_middleware(
 )
 
 if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Configure logging
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="debug")

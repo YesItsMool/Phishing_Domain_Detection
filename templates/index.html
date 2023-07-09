@@ -13,4 +13,34 @@ Phishing Prediction
 {% if prediction %}
 <p id="prediction-result">Prediction: {{ prediction }}</p>
 {% endif %}
+
+<script>
+document.getElementById("prediction-form").addEventListener("submit", function(event) {
+    event.preventDefault();  // Prevent the default form submission
+
+    var urlInput = document.getElementById("url");
+    var url = urlInput.value;
+
+    // Send the features to the /predict endpoint as JSON data
+    fetch("/predict", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            "url": url
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Display the prediction result
+        var predictionResult = document.getElementById("prediction-result");
+        if (predictionResult) {
+            predictionResult.innerHTML = "Prediction: " + data.prediction;
+        }
+    })
+    .catch(error => console.error(error));
+});
+
+</script>
 {% endblock %}

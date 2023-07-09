@@ -1,68 +1,88 @@
 from urllib.parse import urlparse
 import tldextract
-import socket
+import aiodns
 import whois
+import socket
+import datetime
 
-def get_activation_time(domain):
+async def get_ip_address(domain):
+    resolver = aiodns.DNSResolver()
+    try:
+        result = await resolver.query(domain, 'A')
+        if result:
+            return result[0].host
+        else:
+            return None
+    except (aiodns.error.DNSError, aiodns.error.AioDnsError):
+        return None
+
+async def get_activation_time(domain):
     try:
         w = whois.whois(domain)
         if w.creation_date:
-            return w.creation_date.strftime("%Y-%m-%d %H:%M:%S")
+            if isinstance(w.creation_date, list):
+                return w.creation_date[0]
+            else:
+                return w.creation_date
         else:
             return None
     except whois.parser.PywhoisError:
         return None
 
-def get_ip_address(domain):
-    try:
-        ip = socket.gethostbyname(domain)
-        return ip
-    except socket.gaierror:
-        return None
-def extract_features(url):
+async def extract_features(url):
     parsed_url = urlparse(url)
     domain = tldextract.extract(url).domain
 
     features = {}
 
-    features['asn_ip'] = socket.gethostbyname(domain)  # You can add your logic to get ASN of IP
-    features['time_domain_activation'] = get_activation_time(domain)
-    features['length_url'] = len(url)
-    features['qty_dollar_directory'] = url.count('$')
-    features['qty_dollar_file'] = parsed_url.params.count('$')
-    features['qty_underline_file'] = parsed_url.params.count('_')
-    features['qty_equal_file'] = parsed_url.params.count('=')
-    features['qty_and_file'] = parsed_url.params.count('&')
-    features['qty_questionmark_directory'] = parsed_url.path.count('?')
-    features['qty_tilde_file'] = parsed_url.params.count('~')
-    features['qty_asterisk_file'] = parsed_url.params.count('*')
-    features['qty_equal_directory'] = parsed_url.path.count('=')
-    features['qty_plus_file'] = parsed_url.params.count('+')
-    features['qty_comma_file'] = parsed_url.params.count(',')
-    features['qty_exclamation_directory'] = parsed_url.path.count('!')
-    features['qty_slash_file'] = parsed_url.params.count('/')
-    features['qty_space_file'] = parsed_url.params.count(' ')
-    features['qty_and_directory'] = parsed_url.path.count('&')
-    features['qty_at_directory'] = parsed_url.path.count('@')
-    features['qty_hashtag_directory'] = parsed_url.path.count('#')
-    features['qty_asterisk_directory'] = parsed_url.path.count('*')
-    features['qty_questionmark_file'] = parsed_url.params.count('?')
-    features['qty_hashtag_file'] = parsed_url.params.count('#')
-    features['qty_exclamation_file'] = parsed_url.params.count('!')
-    features['qty_at_file'] = parsed_url.params.count('@')
-    features['qty_comma_directory'] = parsed_url.path.count(',')
-    features['qty_percent_file'] = parsed_url.params.count('%')
-    features['qty_hyphen_file'] = parsed_url.params.count('-')
-    features['qty_tilde_directory'] = parsed_url.path.count('~')
-    features['qty_underline_directory'] = parsed_url.path.count('_')
-    features['qty_space_directory'] = parsed_url.path.count(' ')
-    features['qty_percent_directory'] = parsed_url.path.count('%')
-    features['qty_plus_directory'] = parsed_url.path.count('+')
-    features['qty_hyphen_directory'] = parsed_url.path.count('-')
-    features['file_length'] = len(parsed_url.params)
-    features['qty_dot_file'] = parsed_url.params.count('.')
-    features['qty_dot_directory'] = parsed_url.path.count('.')
-    features['qty_slash_url'] = url.count('/')
-    features['qty_slash_directory'] = parsed_url.path.count('/')
-    features['directory_length'] = len(parsed_url.path)
+    try:
+        features['asn_ip'] = float(socket.gethostbyname(domain))
+    except socket.gaierror:
+        features['asn_ip'] = 0.0
+
+    activation_time = await get_activation_time(domain)
+    if activation_time:
+        features['time_domain_activation'] = activation_time.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        features['time_domain_activation'] = 0.0
+
+    features['length_url'] = float(len(url))
+    features['qty_dollar_directory'] = float(url.count('$'))
+    features['qty_dollar_file'] = float(parsed_url.params.count('$'))
+    features['qty_underline_file'] = float(parsed_url.params.count('_'))
+    features['qty_equal_file'] = float(parsed_url.params.count('='))
+    features['qty_and_file'] = float(parsed_url.params.count('&'))
+    features['qty_questionmark_directory'] = float(parsed_url.path.count('?'))
+    features['qty_tilde_file'] = float(parsed_url.params.count('~'))
+    features['qty_asterisk_file'] = float(parsed_url.params.count('*'))
+    features['qty_equal_directory'] = float(parsed_url.path.count('='))
+    features['qty_plus_file'] = float(parsed_url.params.count('+'))
+    features['qty_comma_file'] = float(parsed_url.params.count(','))
+    features['qty_exclamation_directory'] = float(parsed_url.path.count('!'))
+    features['qty_slash_file'] = float(parsed_url.params.count('/'))
+    features['qty_space_file'] = float(parsed_url.params.count(' '))
+    features['qty_and_directory'] = float(parsed_url.path.count('&'))
+    features['qty_at_directory'] = float(parsed_url.path.count('@'))
+    features['qty_hashtag_directory'] = float(parsed_url.path.count('#'))
+    features['qty_asterisk_directory'] = float(parsed_url.path.count('*'))
+    features['qty_questionmark_file'] = float(parsed_url.params.count('?'))
+    features['qty_hashtag_file'] = float(parsed_url.params.count('#'))
+    features['qty_exclamation_file'] = float(parsed_url.params.count('!'))
+    features['qty_at_file'] = float(parsed_url.params.count('@'))
+    features['qty_comma_directory'] = float(parsed_url.path.count(','))
+    features['qty_percent_file'] = float(parsed_url.params.count('%'))
+    features['qty_hyphen_file'] = float(parsed_url.params.count('-'))
+    features['qty_tilde_directory'] = float(parsed_url.path.count('~'))
+    features['qty_underline_directory'] = float(parsed_url.path.count('_'))
+    features['qty_space_directory'] = float(parsed_url.path.count(' '))
+    features['qty_percent_directory'] = float(parsed_url.path.count('%'))
+    features['qty_plus_directory'] = float(parsed_url.path.count('+'))
+    features['qty_hyphen_directory'] = float(parsed_url.path.count('-'))
+    features['file_length'] = float(len(parsed_url.params))
+    features['qty_dot_file'] = float(parsed_url.params.count('.'))
+    features['qty_dot_directory'] = float(parsed_url.path.count('.'))
+    features['qty_slash_url'] = float(url.count('/'))
+    features['qty_slash_directory'] = float(parsed_url.path.count('/'))
+    features['directory_length'] = float(len(parsed_url.path))
+
     return features
