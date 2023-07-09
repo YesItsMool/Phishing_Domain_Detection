@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}
+Register - Phishing Prediction
+{% endblock %}
+
+{% block content %}
+<h2>Register</h2>
+<form id="registration-form" method="post">
+    <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" class="form-control">
+    </div>
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" class="form-control">
+    </div>
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" class="form-control">
+    </div>
+    <input type="submit" value="Register" class="btn btn-primary">
+</form>
+
+<p id="registration-result"></p>
+
+<script>
+    document.getElementById('registration-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        var username = document.getElementById('username').value;
+        var email = document.getElementById('email').value;
+        var password = document.getElementById('password').value;
+
+        fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: username,
+                email: email,
+                password: password
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('registration-result').innerText = data.message;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,29 +1,31 @@
-from fastapi import FastAPI, HTTPException, Request, Form
+from fastapi import FastAPI, Request, Form, Depends
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+from routes import auth
 from fastapi.middleware.cors import CORSMiddleware
 from joblib import load
 import numpy as np
-from pydantic import BaseModel, ValidationError
-from typing import List
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
 
-# Load the model
-model = load('model.joblib')
-
-# Initialize the FastAPI app
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Enable CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.include_router(auth.router)
 
+# Load the model
+model = load('model.joblib')
+
+class RegistrationForm(BaseModel):
+    username: str
+    email: str
+    password: str
+
+
+class LoginForm(BaseModel):
+    username: str
+    password: str
 
 class Features(BaseModel):
     asn_ip: float
@@ -68,9 +70,25 @@ class Features(BaseModel):
     directory_length: float
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.post("/register", response_class=HTMLResponse)
+def register(request: Request, form: RegistrationForm):
+    # Handle registration form submission here
+    # Retrieve form data from request
+    # Register user using the UserManager
+    return templates.TemplateResponse("registration_success.html", {"request": request})
+
+
+@app.post("/login", response_class=HTMLResponse)
+def login(request: Request, form: LoginForm):
+    # Handle login form submission here
+    # Retrieve form data from request
+    # Check credentials using the UserManager
+    return templates.TemplateResponse("login_success.html", {"request": request})
 
 
 @app.post("/predict")
@@ -97,4 +115,19 @@ def predict(features: Features):
     prediction = int(prediction[0])
     
     # Return the prediction
-    return templates.TemplateResponse("index.html", {"request": request, "prediction": prediction})
+    # return templates.TemplateResponse("index.html", {"request": request, "prediction": prediction})
+    return {"prediction": prediction}
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -33,6 +33,5 @@ url = 'http://localhost:8000/predict'
 
 # Send a POST request to the /predict endpoint
 response = requests.post(url, json=features)
-
 # Print the response
 print(response.json())

@@ -1,7 +1,127 @@
+/* Reset default styles */
 body {
+    margin: 0;
+    padding: 0;
     font-family: Arial, sans-serif;
-}
-
-#prediction-form {
+    background-color: #f5f5f5;
+  }
+  
+  /* Header styles */
+  header {
+    background-color: #333;
+    padding: 2em 0;
+    text-align: center;
+  }
+  
+  header h1 {
+    font-size: 2.5em;
+    color: #fff;
+    margin: 0;
+  }
+  
+  header p {
+    font-size: 1.2em;
+    color: #ccc;
+    margin: 0;
+  }
+  
+  /* Main content styles */
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2em;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .jumbotron {
+    background-image: url('/static/img/3808762.jpg'); /* Replace with your desired image URL */
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+    padding: 4em;
+    text-align: center;
+  }
+  
+  .jumbotron h1 {
+    font-size: 3em;
+    margin-bottom: 0.5em;
+  }
+  
+  .jumbotron p {
+    font-size: 1.5em;
+    margin-bottom: 2em;
+  }
+  
+  /* Form styles */
+  form {
     margin-bottom: 1em;
-}
+  }
+  
+  .form-group {
+    margin-bottom: 1em;
+  }
+  
+  .form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5em;
+    color: #333;
+  }
+  
+  .form-control {
+    width: 100%;
+    padding: 0.5em;
+    font-size: 1em;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  
+  .btn-primary {
+    background-color: #ff6600;
+    color: #fff;
+    border: none;
+    padding: 0.5em 1em;
+    font-size: 1em;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .btn-primary:hover {
+    background-color: #ff5500;
+  }
+  
+  /* Footer styles */
+  .footer {
+    background-color: #333;
+    padding: 1em 0;
+    text-align: center;
+  }
+  
+  .footer span {
+    font-size: 0.9em;
+    color: #ccc;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    header h1 {
+      font-size: 2.2em;
+    }
+  
+    header p {
+      font-size: 1em;
+    }
+  
+    .jumbotron h1 {
+      font-size: 2.5em;
+    }
+  
+    .jumbotron p {
+      font-size: 1.2em;
+    }
+  }
+ 
+  .display-4{
+    color: aqua;
+  }
