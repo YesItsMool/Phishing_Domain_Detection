@@ -5,3 +5,4 @@ seaborn
 fastapi 
 jinja2 
 aiofiles
+python-whois

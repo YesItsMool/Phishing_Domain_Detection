@@ -1,70 +1,68 @@
 from urllib.parse import urlparse
 import tldextract
 import socket
-import ssl
-import OpenSSL
+import whois
 
-def extract_features_from_url(url: str):
+def get_activation_time(domain):
+    try:
+        w = whois.whois(domain)
+        if w.creation_date:
+            return w.creation_date.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            return None
+    except whois.parser.PywhoisError:
+        return None
+
+def get_ip_address(domain):
+    try:
+        ip = socket.gethostbyname(domain)
+        return ip
+    except socket.gaierror:
+        return None
+def extract_features(url):
+    parsed_url = urlparse(url)
+    domain = tldextract.extract(url).domain
+
     features = {}
 
-    # Parse the URL
-    parsed_url = urlparse(url)
-    extracted = tldextract.extract(url)
-
-    # Extract basic features from the URL
+    features['asn_ip'] = socket.gethostbyname(domain)  # You can add your logic to get ASN of IP
+    features['time_domain_activation'] = get_activation_time(domain)
     features['length_url'] = len(url)
-    features['qty_slash_url'] = url.count('/')
-    features['qty_dot_url'] = url.count('.')
-    features['qty_hyphen_url'] = url.count('-')
-    features['qty_underline_url'] = url.count('_')
-    features['qty_questionmark_url'] = url.count('?')
-    features['qty_equal_url'] = url.count('=')
-    features['qty_at_url'] = url.count('@')
-    features['qty_and_url'] = url.count('&')
-    features['qty_exclamation_url'] = url.count('!')
-    features['qty_space_url'] = url.count(' ')
-    features['qty_tilde_url'] = url.count('~')
-    features['qty_comma_url'] = url.count(',')
-    features['qty_plus_url'] = url.count('+')
-    features['qty_asterisk_url'] = url.count('*')
-    features['qty_hashtag_url'] = url.count('#')
-    features['qty_dollar_url'] = url.count('$')
-    features['qty_percent_url'] = url.count('%')
-
-    # Extract domain based features
-    features['length_domain'] = len(extracted.domain)
-    features['qty_dot_domain'] = extracted.domain.count('.')
-    features['qty_hyphen_domain'] = extracted.domain.count('-')
-    features['qty_underline_domain'] = extracted.domain.count('_')
-
-    # Extract subdomain based features
-    features['length_subdomain'] = len(extracted.subdomain)
-    features['qty_dot_subdomain'] = extracted.subdomain.count('.')
-    features['qty_hyphen_subdomain'] = extracted.subdomain.count('-')
-    features['qty_underline_subdomain'] = extracted.subdomain.count('_')
-
-    # Extract directory based features
-    features['length_directory'] = len(parsed_url.path)
-    features['qty_slash_directory'] = parsed_url.path.count('/')
-    features['qty_dot_directory'] = parsed_url.path.count('.')
-    features['qty_hyphen_directory'] = parsed_url.path.count('-')
-    features['qty_underline_directory'] = parsed_url.path.count('_')
-
-    # Extract file based features
-    features['length_file'] = len(parsed_url.params)
-    features['qty_slash_file'] = parsed_url.params.count('/')
-    features['qty_dot_file'] = parsed_url.params.count('.')
-    features['qty_hyphen_file'] = parsed_url.params.count('-')
+    features['qty_dollar_directory'] = url.count('$')
+    features['qty_dollar_file'] = parsed_url.params.count('$')
     features['qty_underline_file'] = parsed_url.params.count('_')
-
-    # Extract ASN of IP
-    ip = socket.gethostbyname(extracted.domain)
-    # You need to use an external service to get the ASN of the IP
-    # features['asn_ip'] = get_asn(ip)
-
-    # Extract activation and expiration time of the domain
-    # You need to use WHOIS data or an external service to get these features
-    # features['time_domain_activation'] = get_activation_time(extracted.domain)
-    # features['time_domain_expiration'] = get_expiration_time(extracted.domain)
-
+    features['qty_equal_file'] = parsed_url.params.count('=')
+    features['qty_and_file'] = parsed_url.params.count('&')
+    features['qty_questionmark_directory'] = parsed_url.path.count('?')
+    features['qty_tilde_file'] = parsed_url.params.count('~')
+    features['qty_asterisk_file'] = parsed_url.params.count('*')
+    features['qty_equal_directory'] = parsed_url.path.count('=')
+    features['qty_plus_file'] = parsed_url.params.count('+')
+    features['qty_comma_file'] = parsed_url.params.count(',')
+    features['qty_exclamation_directory'] = parsed_url.path.count('!')
+    features['qty_slash_file'] = parsed_url.params.count('/')
+    features['qty_space_file'] = parsed_url.params.count(' ')
+    features['qty_and_directory'] = parsed_url.path.count('&')
+    features['qty_at_directory'] = parsed_url.path.count('@')
+    features['qty_hashtag_directory'] = parsed_url.path.count('#')
+    features['qty_asterisk_directory'] = parsed_url.path.count('*')
+    features['qty_questionmark_file'] = parsed_url.params.count('?')
+    features['qty_hashtag_file'] = parsed_url.params.count('#')
+    features['qty_exclamation_file'] = parsed_url.params.count('!')
+    features['qty_at_file'] = parsed_url.params.count('@')
+    features['qty_comma_directory'] = parsed_url.path.count(',')
+    features['qty_percent_file'] = parsed_url.params.count('%')
+    features['qty_hyphen_file'] = parsed_url.params.count('-')
+    features['qty_tilde_directory'] = parsed_url.path.count('~')
+    features['qty_underline_directory'] = parsed_url.path.count('_')
+    features['qty_space_directory'] = parsed_url.path.count(' ')
+    features['qty_percent_directory'] = parsed_url.path.count('%')
+    features['qty_plus_directory'] = parsed_url.path.count('+')
+    features['qty_hyphen_directory'] = parsed_url.path.count('-')
+    features['file_length'] = len(parsed_url.params)
+    features['qty_dot_file'] = parsed_url.params.count('.')
+    features['qty_dot_directory'] = parsed_url.path.count('.')
+    features['qty_slash_url'] = url.count('/')
+    features['qty_slash_directory'] = parsed_url.path.count('/')
+    features['directory_length'] = len(parsed_url.path)
     return features
